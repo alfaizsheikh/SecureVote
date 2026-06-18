@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Vote - {{ survey.title }} - SecureVote{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Survey Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-poll me-2"></i>{{ survey.title }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">{{ survey.description }}</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                Created: {{ survey.created_at|date:"M d, Y H:i" }}
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <small class="text-muted">
+                                <i class="fas fa-user me-1"></i>
+                                By: {{ survey.created_by.get_full_name|default:survey.created_by.username }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Voting Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-vote-yea me-2"></i>Cast Your Vote
+                    </h5>
+                    <small class="text-muted">Select one option below</small>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="votingForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            {% for choice in form.selected_option %}
+                            <div class="vote-option" data-option-id="{{ choice.choice_value }}">
+                                <div class="form-check">
+                                    {{ choice.tag }}
+                                    <label class="form-check-label w-100" for="{{ choice.id_for_label }}">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-check text-primary"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-0 fw-bold">{{ choice.choice_label }}</h6>
+                                                <small class="text-muted">Click to select this option</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'survey_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Surveys
+                            </a>
+                            <button type="submit" class="btn btn-success" id="submitVote" disabled>
+                                <i class="fas fa-check me-2"></i>Submit Vote
+                                <span class="loading spinner-border spinner-border-sm ms-2" role="status"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Voting Guidelines -->
+            <div class="card mt-4 bg-light">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>Voting Guidelines
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <small>You can vote only once per survey</small>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <small>Your vote is anonymous and secure</small>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <small>Results are updated in real-time</small>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <small>You can view results after voting</small>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('votingForm');
+    const submitButton = document.getElementById('submitVote');
+    const voteOptions = document.querySelectorAll('.vote-option');
+    const radioInputs = document.querySelectorAll('input[name="selected_option"]');
+    
+    // Handle option selection
+    voteOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const radioInput = this.querySelector('input[type="radio"]');
+            if (radioInput) {
+                radioInput.checked = true;
+                updateSelection();
+            }
+        });
+    });
+    
+    // Handle radio input changes
+    radioInputs.forEach(input => {
+        input.addEventListener('change', updateSelection);
+    });
+    
+    function updateSelection() {
+        // Remove selected class from all options
+        voteOptions.forEach(option => {
+            option.classList.remove('selected');
+        });
+        
+        // Add selected class to chosen option
+        const selectedInput = document.querySelector('input[name="selected_option"]:checked');
+        if (selectedInput) {
+            const selectedOption = selectedInput.closest('.vote-option');
+            selectedOption.classList.add('selected');
+            submitButton.disabled = false;
+        } else {
+            submitButton.disabled = true;
+        }
+    }
+    
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        const selectedInput = document.querySelector('input[name="selected_option"]:checked');
+        if (!selectedInput) {
+            e.preventDefault();
+            alert('Please select an option before submitting your vote.');
+            return;
+        }
+        
+        // Show loading state
+        const loading = submitButton.querySelector('.loading');
+        if (loading) {
+            loading.classList.add('show');
+            submitButton.disabled = true;
+        }
+        
+        // Confirm vote submission
+        const selectedLabel = selectedInput.closest('.vote-option').querySelector('h6').textContent;
+        if (!confirm(`Are you sure you want to vote for "${selectedLabel}"? This action cannot be undone.`)) {
+            e.preventDefault();
+            if (loading) {
+                loading.classList.remove('show');
+                submitButton.disabled = false;
+            }
+        }
+    });
+    
+    // Add hover effects
+    voteOptions.forEach(option => {
+        option.addEventListener('mouseenter', function() {
+            if (!this.classList.contains('selected')) {
+                this.style.borderColor = 'var(--accent-color)';
+                this.style.backgroundColor = 'rgba(39, 174, 96, 0.05)';
+            }
+        });
+        
+        option.addEventListener('mouseleave', function() {
+            if (!this.classList.contains('selected')) {
+                this.style.borderColor = '#e9ecef';
+                this.style.backgroundColor = 'transparent';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+

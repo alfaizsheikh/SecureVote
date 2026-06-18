@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Surveys - SecureVote{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">
+                    <i class="fas fa-poll me-3 text-primary"></i>Available Surveys
+                </h2>
+                <p class="text-muted">Choose a survey to participate in. Your voice matters!</p>
+            </div>
+        </div>
+    </div>
+    
+    {% if surveys %}
+    <div class="row">
+        {% for survey in surveys %}
+        <div class="col-lg-6 mb-4">
+            <div class="card survey-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title fw-bold">{{ survey.title }}</h5>
+                        {% if survey.id in voted_survey_ids %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check me-1"></i>Voted
+                        </span>
+                        {% else %}
+                        <span class="badge bg-primary">
+                            <i class="fas fa-vote-yea me-1"></i>Active
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="card-text text-muted mb-3">{{ survey.description }}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            Created {{ survey.created_at|date:"M d, Y" }}
+                        </small>
+                        <small class="text-muted">
+                            <i class="fas fa-list me-1"></i>
+                            {{ survey.options.count }} options
+                        </small>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex">
+                        {% if survey.id in voted_survey_ids %}
+                        <a href="{% url 'results_detail' survey.id %}" class="btn btn-outline-success">
+                            <i class="fas fa-chart-bar me-2"></i>View Results
+                        </a>
+                        <button class="btn btn-secondary" disabled>
+                            <i class="fas fa-check me-2"></i>Already Voted
+                        </button>
+                        {% else %}
+                        <a href="{% url 'vote' survey.id %}" class="btn btn-primary">
+                            <i class="fas fa-vote-yea me-2"></i>Vote Now
+                        </a>
+                        <a href="{% url 'results_detail' survey.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-chart-bar me-2"></i>Preview Results
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if survey.end_date %}
+                <div class="card-footer bg-light">
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        Ends on {{ survey.end_date|date:"M d, Y H:i" }}
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Statistics Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5 class="fw-bold mb-3">Your Participation</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <h3 class="text-primary fw-bold">{{ surveys.count }}</h3>
+                                <small class="text-muted">Total Surveys</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <h3 class="text-success fw-bold">{{ voted_survey_ids|length }}</h3>
+                                <small class="text-muted">Surveys Voted</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                {% with remaining=surveys.count|add:voted_survey_ids|length|add:"-"|add:voted_survey_ids|length %}
+                                <h3 class="text-warning fw-bold">{{ surveys.count|add:"-"|add:voted_survey_ids|length }}</h3>
+                                {% endwith %}
+                                <small class="text-muted">Remaining</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% else %}
+    <!-- No Surveys Available -->
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-inbox text-muted" style="font-size: 4rem;"></i>
+                </div>
+                <h4 class="fw-bold text-muted mb-3">No Surveys Available</h4>
+                <p class="text-muted mb-4">
+                    There are currently no active surveys to participate in.<br>
+                    Check back later for new surveys and voting opportunities.
+                </p>
+                <a href="{% url 'welcome' %}" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to survey cards
+    const surveyCards = document.querySelectorAll('.survey-card');
+    surveyCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Add click tracking for analytics (placeholder)
+    const voteButtons = document.querySelectorAll('a[href*="vote"]');
+    voteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Track vote button clicks
+            console.log('Vote button clicked for survey:', this.href);
+        });
+    });
+});
+</script>
+{% endblock %}
+

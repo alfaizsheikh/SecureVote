@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - SecureVote{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <div>
+                    <h2 class="fw-bold">
+                        <i class="fas fa-tachometer-alt me-3 text-primary"></i>Admin Dashboard
+                    </h2>
+                    <p class="text-muted">Manage surveys and monitor platform activity</p>
+                </div>
+                <div>
+                    <a href="{% url 'create_survey' %}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Create Survey
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-5">
+        <div class="col-lg-4 mb-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="fw-bold">{{ surveys.count }}</h3>
+                            <p class="mb-0">Total Surveys</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-poll" style="font-size: 2.5rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="fw-bold">{{ total_users }}</h3>
+                            <p class="mb-0">Verified Users</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-users" style="font-size: 2.5rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="fw-bold">{{ total_votes }}</h3>
+                            <p class="mb-0">Total Votes</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-vote-yea" style="font-size: 2.5rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Survey Management -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Survey Management
+                        </h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary btn-sm active" data-filter="all">
+                                All Surveys
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-filter="active">
+                                Active Only
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-filter="inactive">
+                                Inactive Only
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if surveys %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Survey Title</th>
+                                    <th>Created</th>
+                                    <th>Status</th>
+                                    <th>Votes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for survey in surveys %}
+                                <tr class="survey-row" data-status="{% if survey.is_active %}active{% else %}inactive{% endif %}">
+                                    <td>
+                                        <div>
+                                            <h6 class="mb-1 fw-bold">{{ survey.title }}</h6>
+                                            <small class="text-muted">{{ survey.description|truncatewords:10 }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small>{{ survey.created_at|date:"M d, Y" }}</small><br>
+                                        <small class="text-muted">{{ survey.created_at|time:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        {% if survey.is_active %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>Active
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-pause me-1"></i>Inactive
+                                        </span>
+                                        {% endif %}
+                                        {% if survey.end_date %}
+                                        <br><small class="text-muted">Ends: {{ survey.end_date|date:"M d, Y" }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">{{ survey.vote_set.count }}</span>
+                                        <small class="text-muted d-block">votes cast</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'results_detail' survey.id %}" class="btn btn-outline-primary btn-sm" title="View Results">
+                                                <i class="fas fa-chart-bar"></i>
+                                            </a>
+                                            <a href="{% url 'vote' survey.id %}" class="btn btn-outline-success btn-sm" title="Preview Vote">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <button class="btn btn-outline-warning btn-sm toggle-status" 
+                                                    data-survey-id="{{ survey.id }}" 
+                                                    data-current-status="{{ survey.is_active|yesno:'true,false' }}"
+                                                    title="{% if survey.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                                {% if survey.is_active %}
+                                                <i class="fas fa-pause"></i>
+                                                {% else %}
+                                                <i class="fas fa-play"></i>
+                                                {% endif %}
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox text-muted" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-muted">No Surveys Created</h5>
+                        <p class="text-muted">Start by creating your first survey to engage with users.</p>
+                        <a href="{% url 'create_survey' %}" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Create First Survey
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-bolt me-2 text-warning"></i>Quick Actions
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'create_survey' %}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-plus-circle d-block mb-2" style="font-size: 1.5rem;"></i>
+                                <small>Create Survey</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'results' %}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-chart-line d-block mb-2" style="font-size: 1.5rem;"></i>
+                                <small>View Analytics</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-cogs d-block mb-2" style="font-size: 1.5rem;"></i>
+                                <small>Django Admin</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'survey_list' %}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-users d-block mb-2" style="font-size: 1.5rem;"></i>
+                                <small>User View</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter functionality
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    const surveyRows = document.querySelectorAll('.survey-row');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.dataset.filter;
+            
+            // Update active button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filter rows
+            surveyRows.forEach(row => {
+                const status = row.dataset.status;
+                if (filter === 'all' || filter === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+    
+    // Toggle survey status (placeholder functionality)
+    const toggleButtons = document.querySelectorAll('.toggle-status');
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const surveyId = this.dataset.surveyId;
+            const currentStatus = this.dataset.currentStatus === 'true';
+            const newStatus = !currentStatus;
+            
+            // This would typically make an AJAX call to update the survey status
+            // For now, we'll just show a confirmation
+            const action = newStatus ? 'activate' : 'deactivate';
+            if (confirm(`Are you sure you want to ${action} this survey?`)) {
+                // Update button appearance
+                if (newStatus) {
+                    this.innerHTML = '<i class="fas fa-pause"></i>';
+                    this.title = 'Deactivate';
+                    this.closest('tr').querySelector('.badge').className = 'badge bg-success';
+                    this.closest('tr').querySelector('.badge').innerHTML = '<i class="fas fa-check me-1"></i>Active';
+                } else {
+                    this.innerHTML = '<i class="fas fa-play"></i>';
+                    this.title = 'Activate';
+                    this.closest('tr').querySelector('.badge').className = 'badge bg-secondary';
+                    this.closest('tr').querySelector('.badge').innerHTML = '<i class="fas fa-pause me-1"></i>Inactive';
+                }
+                this.dataset.currentStatus = newStatus.toString();
+                
+                // Show success message
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-check-circle me-2"></i>Survey ${action}d successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
+                
+                // Auto-dismiss after 3 seconds
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 3000);
+            }
+        });
+    });
+    
+    // Auto-refresh dashboard every 60 seconds
+    setInterval(function() {
+        // In a real application, you might want to refresh only the statistics
+        // location.reload();
+    }, 60000);
+});
+</script>
+{% endblock %}
+

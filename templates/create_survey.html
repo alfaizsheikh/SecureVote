@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Survey - SecureVote{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>Create New Survey
+                    </h4>
+                    <p class="mb-0 text-muted">Design a new survey for users to participate in</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="surveyForm">
+                        {% csrf_token %}
+                        
+                        <!-- Survey Details -->
+                        <div class="mb-4">
+                            <h5 class="fw-bold mb-3">
+                                <i class="fas fa-info-circle me-2 text-primary"></i>Survey Details
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label for="{{ survey_form.title.id_for_label }}" class="form-label">
+                                    <i class="fas fa-heading me-2"></i>Survey Title *
+                                </label>
+                                {{ survey_form.title }}
+                                {% if survey_form.title.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in survey_form.title.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ survey_form.description.id_for_label }}" class="form-label">
+                                    <i class="fas fa-align-left me-2"></i>Description *
+                                </label>
+                                {{ survey_form.description }}
+                                {% if survey_form.description.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in survey_form.description.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ survey_form.end_date.id_for_label }}" class="form-label">
+                                    <i class="fas fa-calendar me-2"></i>End Date (Optional)
+                                </label>
+                                {{ survey_form.end_date }}
+                                <div class="form-text">Leave empty for no expiration date</div>
+                                {% if survey_form.end_date.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in survey_form.end_date.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Survey Options -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0">
+                                    <i class="fas fa-list me-2 text-success"></i>Survey Options
+                                </h5>
+                                <button type="button" class="btn btn-outline-success btn-sm" id="addOption">
+                                    <i class="fas fa-plus me-1"></i>Add Option
+                                </button>
+                            </div>
+                            
+                            <div id="optionsContainer">
+                                <div class="option-item mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-circle text-primary"></i>
+                                        </span>
+                                        <input type="text" class="form-control" name="option_0" placeholder="Enter option text" required>
+                                        <button type="button" class="btn btn-outline-danger remove-option" disabled>
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="option-item mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-circle text-primary"></i>
+                                        </span>
+                                        <input type="text" class="form-control" name="option_1" placeholder="Enter option text" required>
+                                        <button type="button" class="btn btn-outline-danger remove-option" disabled>
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Minimum 2 options required. You can add up to 10 options.
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Create Survey
+                                <span class="loading spinner-border spinner-border-sm ms-2" role="status"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Guidelines -->
+            <div class="card mt-4 bg-light">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>Survey Creation Guidelines
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <small>Use clear and concise titles</small>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <small>Provide detailed descriptions</small>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <small>Keep options balanced and fair</small>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <small>Avoid leading or biased questions</small>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <small>Test your survey before publishing</small>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <small>Set appropriate end dates</small>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const optionsContainer = document.getElementById('optionsContainer');
+    const addOptionBtn = document.getElementById('addOption');
+    const form = document.getElementById('surveyForm');
+    let optionCount = 2;
+    
+    // Add new option
+    addOptionBtn.addEventListener('click', function() {
+        if (optionCount < 10) {
+            const optionHtml = `
+                <div class="option-item mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-circle text-primary"></i>
+                        </span>
+                        <input type="text" class="form-control" name="option_${optionCount}" placeholder="Enter option text" required>
+                        <button type="button" class="btn btn-outline-danger remove-option">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            optionsContainer.insertAdjacentHTML('beforeend', optionHtml);
+            optionCount++;
+            updateRemoveButtons();
+            
+            if (optionCount >= 10) {
+                addOptionBtn.disabled = true;
+                addOptionBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Maximum Reached';
+            }
+        }
+    });
+    
+    // Remove option
+    optionsContainer.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-option')) {
+            const optionItem = e.target.closest('.option-item');
+            optionItem.remove();
+            optionCount--;
+            updateRemoveButtons();
+            renumberOptions();
+            
+            if (optionCount < 10) {
+                addOptionBtn.disabled = false;
+                addOptionBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Add Option';
+            }
+        }
+    });
+    
+    function updateRemoveButtons() {
+        const removeButtons = document.querySelectorAll('.remove-option');
+        removeButtons.forEach(button => {
+            button.disabled = optionCount <= 2;
+        });
+    }
+    
+    function renumberOptions() {
+        const optionInputs = document.querySelectorAll('#optionsContainer input[type="text"]');
+        optionInputs.forEach((input, index) => {
+            input.name = `option_${index}`;
+        });
+    }
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const optionInputs = document.querySelectorAll('#optionsContainer input[type="text"]');
+        const filledOptions = Array.from(optionInputs).filter(input => input.value.trim() !== '');
+        
+        if (filledOptions.length < 2) {
+            e.preventDefault();
+            alert('Please provide at least 2 options for the survey.');
+            return;
+        }
+        
+        // Check for duplicate options
+        const optionValues = filledOptions.map(input => input.value.trim().toLowerCase());
+        const uniqueValues = [...new Set(optionValues)];
+        
+        if (optionValues.length !== uniqueValues.length) {
+            e.preventDefault();
+            alert('Please ensure all options are unique.');
+            return;
+        }
+        
+        // Show loading state
+        const submitButton = form.querySelector('button[type="submit"]');
+        const loading = submitButton.querySelector('.loading');
+        if (loading) {
+            loading.classList.add('show');
+            submitButton.disabled = true;
+        }
+    });
+    
+    // Initialize remove button states
+    updateRemoveButtons();
+    
+    // Auto-resize textarea
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    }
+});
+</script>
+{% endblock %}
+
